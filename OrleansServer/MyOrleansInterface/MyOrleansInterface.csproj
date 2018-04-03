@@ -172,6 +172,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IGameGrain.cs" />
+    <Compile Include="IGameObserver.cs" />
+    <Compile Include="IHello.cs" />
+    <Compile Include="IHelloArchive.cs" />
     <Compile Include="IPlayerGrain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

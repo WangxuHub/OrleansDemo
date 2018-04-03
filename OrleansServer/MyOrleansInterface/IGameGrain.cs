@@ -9,5 +9,6 @@ namespace MyOrleansInterface
 {
     public interface IGameGrain : IGrainWithStringKey
     {
+        Task<IGameObserver> SubscribeForGameUpdates(IGrainObserver obj);
     }
 }
