@@ -17,6 +17,7 @@ namespace OrleansClient
     {
         static int Main(string[] args)
         {
+            Console.Title = "Orleans客户端";
             return RunMainAsync().Result;
         }
 
@@ -34,7 +35,9 @@ namespace OrleansClient
             }
             catch (Exception e)
             {
+                
                 Console.WriteLine(e);
+                
                 Console.ReadKey();
                 return 1;
             }
@@ -55,7 +58,8 @@ namespace OrleansClient
                             options.ClusterId = "dev";
                             options.ServiceId = "HelloWorldApp";
                         })
-                        .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IHello).Assembly).WithReferences())
+                       // .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IHello).Assembly).WithReferences())
+                       // .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(PlayerGrain).Assembly).WithReferences())
                         .ConfigureLogging(logging => logging.AddConsole())
                         .Build();
 
