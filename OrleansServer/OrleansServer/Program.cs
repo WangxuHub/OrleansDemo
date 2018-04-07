@@ -78,6 +78,7 @@ namespace OrleansServer
                 .AddAdoNetGrainStorage("GrainStorageForTest", options =>
                 {
                     options.Invariant = invariant;
+                    options.UseJsonFormat = true;
                     options.ConnectionString = dbConnectString;
                 }); ;
 
