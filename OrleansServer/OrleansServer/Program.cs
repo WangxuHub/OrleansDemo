@@ -25,8 +25,11 @@ namespace OrleansServer
         {
             try
             {
+                var tick = new System.Diagnostics.Stopwatch();
+                tick.Start();
                 var host = await StartSilo();
-                Console.WriteLine("Press Enter to terminate...----------------------");
+                tick.Stop();
+                Console.WriteLine($"Use {tick.Elapsed.Milliseconds}ms，Press Enter to terminate...----------------------");
                 Console.ReadLine();
 
                 await host.StopAsync();
@@ -42,6 +45,9 @@ namespace OrleansServer
 
         private static async Task<ISiloHost> StartSilo()
         {
+            string invariant = "System.Data.SqlClient";
+            string dbConnectString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=OrleansServerDb;Integrated Security=True";
+
             // define the cluster configuration
             var builder = new SiloHostBuilder()
                 .UseLocalhostClustering()
@@ -52,7 +58,28 @@ namespace OrleansServer
                 })
                 .Configure<EndpointOptions>(options => options.AdvertisedIPAddress = IPAddress.Loopback)
                 .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(HelloGrain).Assembly).WithReferences())
-                .ConfigureLogging(logging => logging.AddConsole());
+                .ConfigureLogging(logging => {
+                    logging.SetMinimumLevel(LogLevel.Warning);
+                    logging.AddConsole();
+                })
+                //集群
+                .UseAdoNetClustering(options =>
+                {
+                    options.ConnectionString = dbConnectString;
+                    options.Invariant = invariant;
+                })
+                //use AdoNet for reminder service
+                .UseAdoNetReminderService(options =>
+                {
+                    options.Invariant = invariant;
+                    options.ConnectionString = dbConnectString;
+                })
+                //use AdoNet for Persistence
+                .AddAdoNetGrainStorage("GrainStorageForTest", options =>
+                {
+                    options.Invariant = invariant;
+                    options.ConnectionString = dbConnectString;
+                }); ;
 
             var host = builder.Build();
             await host.StartAsync();

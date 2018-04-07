@@ -28,7 +28,19 @@ namespace OrleansClient
                 using (var client = await StartClientWithRetries())
                 {
                     await DoClientWork(client);
-                    Console.ReadKey();
+
+                    while (true)
+                    {
+                        try
+                        {
+                            await DoPersistenceWork(client);
+                        }
+                        catch(Exception ee)
+                        {
+                            Console.WriteLine(ee.GetBaseException().Message);
+                        }
+                        Console.ReadKey();
+                    }
                 }
 
                 return 0;
@@ -60,7 +72,7 @@ namespace OrleansClient
                         })
                        // .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(IHello).Assembly).WithReferences())
                        // .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(PlayerGrain).Assembly).WithReferences())
-                        .ConfigureLogging(logging => logging.AddConsole())
+                        .ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Warning).AddConsole())
                         .Build();
 
                     await client.Connect();
@@ -87,7 +99,31 @@ namespace OrleansClient
             // example of calling grains from the initialized client
             var friend = client.GetGrain<IHello>(0);
             var response = await friend.SayHello("Good morning, my friend!");
+
+            var oldColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine("\n\n{0}\n\n", response);
+            Console.ForegroundColor = oldColor;
+        }
+
+        private static Task DoPersistenceWork(IClusterClient client)
+        {
+            var clientList = new List<IMyPersistenceGrain>();
+            Enumerable.Range(0, 10).ToList().ForEach(a=> {
+                var grain = client.GetGrain<IMyPersistenceGrain>(a);
+                var curValue = grain.DoRead().Result;
+                if (string.IsNullOrWhiteSpace(curValue))
+                {
+                    grain.DoWrite($"{a}__{DateTime.Now.ToShortTimeString()}").Wait();
+                }
+                clientList.Add(grain);
+            });
+
+            clientList.ForEach(item=> {
+                var curValue = item.DoRead().Result;
+                Console.WriteLine($"grainID {item.GetPrimaryKeyLong()}  , value {curValue}");
+            });
+            return Task.CompletedTask;
         }
     }
 }
